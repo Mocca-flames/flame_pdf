@@ -159,17 +159,17 @@ Create FastAPI service with /generate-pdf endpoint
 
 - [✅] Node calls Python API via HTTP
 - [✅] Handle PDF file sending via WhatsApp
-[-] Implement cleanup (delete images after PDF sent)
-[-] Add error handling (no images, API timeout)
-[-] User feedback messages throughout process
+- [✅] Implement cleanup (delete images after PDF sent)
+- [✅] Add error handling (no images, API timeout)
+- [✅] User feedback messages throughout process
 
 ### Phase 5: Docker & Deploy (Day 9-10)
 
-- [ ] Create Dockerfiles for both services
-- [ ] Write docker-compose.yml
+- [✅] Create Dockerfiles for both services
+- [✅] Write docker-compose.yml
 - [ ] Test full flow in Docker environment
-- [ ] Add health check endpoints
-- [ ] Write deployment README
+- [✅] Add health check endpoints
+- [✅] Write deployment README
 
 ---
 

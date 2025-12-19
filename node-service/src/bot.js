@@ -6,6 +6,8 @@ const fs = require("fs");
 const path = require("path");
 const stateManager = require("./state-manager");
 const handlers = require("./handlers");
+const express = require("express");
+const app = express();
 
 const UPLOADS_DIR = path.join(__dirname, "..", "shared", "uploads");
 
@@ -60,5 +62,22 @@ client.on("message", async (msg) => {
 });
 
 client.initialize();
+
+// Health Check Endpoint
+app.get("/health", (req, res) => {
+  const status = client.info ? "ready" : "initializing";
+  res
+    .status(200)
+    .json({
+      status: status,
+      whatsapp_state: client.info ? client.info.status : "unknown",
+    });
+});
+
+// Start the Express server for health checks
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Health check server listening on port ${PORT}`);
+});
 
 module.exports = { client };
