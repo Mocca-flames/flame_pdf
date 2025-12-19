@@ -20,16 +20,22 @@ async function handleCommand(msg, body) {
   const command = body.toLowerCase();
 
   // Command Aliases and Flexible Matching
-  const isGenerate = command === "/generate" || command === "/pdf" || command === "/done";
+  const isGenerate =
+    command === "/generate" || command === "/pdf" || command === "/done";
   const isClear = command === "/clear" || command === "/reset";
-  const isHelp = command === "/help" || command === "/start" || command === "hi" || command === "hello" || command === "hey";
+  const isHelp =
+    command === "/help" ||
+    command === "/start" ||
+    command === "hi" ||
+    command === "hello" ||
+    command === "hey";
 
   if (isGenerate) {
     const last = generateCooldowns.get(userId) || 0;
     const now = Date.now();
     if (now - last < GENERATE_COOLDOWN_MS) {
       await msg.reply(
-        "Please wait a few seconds before requesting another PDF."
+        "Hold on, just give me a few seconds before the next PDF request 😊"
       );
       return;
     }
@@ -38,7 +44,7 @@ async function handleCommand(msg, body) {
     const session = stateManager.getSession(userId);
     if (!session || session.images.length === 0) {
       await msg.reply(
-        "❌ Please send one or more images before using /pdf."
+        "Looks like you haven't sent any images yet. Send me some images first, then I can create your PDF!"
       );
       return;
     }
@@ -52,7 +58,7 @@ async function handleCommand(msg, body) {
 
     if (missingImages.length === images.length) {
       await msg.reply(
-        "❌ No images found on server. Please re-upload your images."
+        "Hmm, I can't find your images on the server. Could you upload them again?"
       );
       stateManager.clearSession(userId);
       return;
@@ -60,12 +66,14 @@ async function handleCommand(msg, body) {
 
     if (images.length > MAX_IMAGES) {
       await msg.reply(
-        `Too many images (${images.length}). Max is ${MAX_IMAGES}. Use /clear or /reset and try again.`
+        `You've got ${images.length} images, but I can only handle up to ${MAX_IMAGES}. Try using /clear to start fresh!`
       );
       return;
     }
 
-    await msg.reply("⏳ Processing your images, this may take a moment...");
+    await msg.reply(
+      "Got it! Processing your images now, this might take a moment..."
+    );
     ensureDir(imageDir);
 
     // Write READY.txt signal
@@ -81,7 +89,9 @@ async function handleCommand(msg, body) {
       const resp = await apiClient.generatePdf(userId, imageDir);
 
       if (!resp?.success) {
-        await msg.reply("PDF generation failed on worker. Try again later.");
+        await msg.reply(
+          "Something went wrong with the PDF generation. Mind trying again in a bit?"
+        );
         return;
       }
 
@@ -89,7 +99,9 @@ async function handleCommand(msg, body) {
       if (resp.useDemo) {
         const demoPath = path.join(__dirname, "..", "..", "assets", "demo.png");
         if (!fs.existsSync(demoPath)) {
-          await msg.reply("Demo image not found. Try again later.");
+          await msg.reply(
+            "Can't find the demo image right now. Please try again later!"
+          );
           return;
         }
         const demoData = fs.readFileSync(demoPath);
@@ -106,7 +118,9 @@ async function handleCommand(msg, body) {
       // Safely resolve PDF path
       let pdfPath = resp.pdfPath || null;
       if (pdfPath === null) {
-        await msg.reply("PDF path not provided. Try again later.");
+        await msg.reply(
+          "Couldn't get the PDF path. Give it another shot later?"
+        );
         return;
       }
       if (!path.isAbsolute(pdfPath)) {
@@ -114,7 +128,9 @@ async function handleCommand(msg, body) {
       }
 
       if (!fs.existsSync(pdfPath)) {
-        await msg.reply("PDF file not found after generation.");
+        await msg.reply(
+          "The PDF was generated but I can't seem to find it. That's odd!"
+        );
         return;
       }
 
@@ -141,12 +157,12 @@ async function handleCommand(msg, body) {
       stateManager.clearSession(userId);
 
       await msg.reply(
-        "✅ Your PDF is ready! Temporary files have been cleaned up."
+        "All done! Your PDF is ready and I've cleaned up the temporary files 🎉"
       );
     } catch (err) {
       console.error("Error generating PDF:", err?.message || err);
       await msg.reply(
-        "❌ Sorry, the PDF generation failed due to a service error. Please try again."
+        "Sorry about that! Something went wrong on my end. Could you try again?"
       );
     }
   } else if (isClear) {
@@ -155,25 +171,27 @@ async function handleCommand(msg, body) {
       fs.rmSync(userDir, { recursive: true, force: true });
     }
     stateManager.clearSession(userId);
-    await msg.reply("Cleared your uploaded images.");
+    await msg.reply(
+      "All cleared! Your images have been deleted and we can start fresh."
+    );
   } else if (isHelp) {
     await msg.reply(
-      "👋 Welcome to the Flame PDF Bot!\n\n" +
-        "I can convert your images into a single PDF document.\n\n" +
-        "How to use:\n" +
-        "1. Send me one or more JPEG or PNG images.\n" +
-        "2. When you are done, type `/pdf` (or `/done`) to generate the document.\n\n" +
-        "Available commands:\n" +
-        "• `/pdf` or `/done` - Generate PDF from uploaded images\n" +
-        "• `/clear` or `/reset` - Clear all uploaded images and start over\n" +
+      "👋 Hey there! Welcome to Flame PDF Bot!\n\n" +
+        "I help you convert your images into a single PDF document.\n\n" +
+        "Here's how it works:\n" +
+        "1. Send me one or more images (JPEG or PNG)\n" +
+        "2. When you're ready, just type `/pdf` or `/done` and I'll create your document\n\n" +
+        "Commands you can use:\n" +
+        "• `/pdf` or `/done` - Create your PDF from the images you've sent\n" +
+        "• `/clear` or `/reset` - Delete all images and start over\n" +
         "• `/help` - Show this message again"
     );
   } else {
     // Catch-all for unrecognized text input
     await msg.reply(
-      "I only understand images and commands. Please send me a JPEG or PNG image, or use one of the commands:\n" +
-      "• `/pdf` to generate your PDF\n" +
-      "• `/help` for instructions"
+      "I can only work with images and commands right now. Send me a JPEG or PNG image, or try one of these:\n" +
+        "• `/pdf` - Generate your PDF\n" +
+        "• `/help` - Get help and instructions"
     );
   }
 }
@@ -188,7 +206,7 @@ async function handleMedia(msg) {
   const mimetype = (media.mimetype || "").toLowerCase();
   if (!/(image\/(jpeg|jpg|png))/i.test(mimetype)) {
     await msg.reply(
-      "Unsupported file type. Please send JPEG or PNG images only."
+      "I can only accept JPEG or PNG images. Could you send a different file?"
     );
     return;
   }
@@ -211,7 +229,7 @@ async function handleMedia(msg) {
   }
   if (session.images.length >= MAX_IMAGES) {
     await msg.reply(
-      `Image limit reached. Max ${MAX_IMAGES} images allowed. Use /clear to reset.`
+      `You've hit the limit of ${MAX_IMAGES} images. Use /clear if you want to start over!`
     );
     return;
   }
@@ -231,7 +249,7 @@ async function handleMedia(msg) {
   stateManager.updateSession(userId, session);
 
   await msg.reply(
-    `Image ${session.images.length} received. Send more or type /pdf`
+    `Got image ${session.images.length}! Send more \n or type /pdf when you're ready.`
   );
 }
 
