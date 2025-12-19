@@ -49,9 +49,14 @@ async function handleCommand(msg, body) {
 
     // Write READY.txt signal
     const readyPath = path.join(imageDir, "READY.txt");
+    console.log(`[handlers] Writing READY.txt to ${readyPath}`);
     fs.writeFileSync(readyPath, "");
+    console.log(`[handlers] READY.txt written successfully`);
 
     try {
+      console.log(
+        `[handlers] Triggering PDF generation for user ${userId} in ${imageDir}`
+      );
       const resp = await apiClient.generatePdf(userId, imageDir);
 
       if (!resp?.success) {
@@ -190,8 +195,10 @@ async function handleMedia(msg) {
   )}.${ext}`;
   const filePath = path.join(userDir, filename);
 
+  console.log(`[handlers] Saving image to ${filePath}`);
   const buffer = Buffer.from(media.data, "base64");
   fs.writeFileSync(filePath, buffer);
+  console.log(`[handlers] Image saved successfully`);
 
   session.images.push(filename);
   stateManager.updateSession(userId, session);

@@ -17,16 +17,28 @@ class GenerateRequest(BaseModel):
 
 @app.post("/generate-pdf")
 async def generate_pdf(req: GenerateRequest):
+    print(f"[python-worker] Received request for user {req.userId} at {req.imageDir}")
     image_dir = Path(req.imageDir)
     ready_file = image_dir / "READY.txt"
+    print(f"[python-worker] Checking for {ready_file.absolute()}")
 
     # Poll for READY.txt with 10-second timeout
     timeout = 10.0
     start_time = time.time()
     while not ready_file.exists():
-        if time.time() - start_time > timeout:
+        elapsed = time.time() - start_time
+        if elapsed > timeout:
+            print(f"[python-worker] TIMEOUT: READY.txt not found after {elapsed:.2f}s at {ready_file.absolute()}")
+            # List files in directory to debug
+            if image_dir.exists():
+                files = list(image_dir.glob("*"))
+                print(f"[python-worker] Files in directory: {[f.name for f in files]}")
+            else:
+                print(f"[python-worker] Directory does not exist: {image_dir.absolute()}")
             raise HTTPException(status_code=408, detail="Timeout waiting for images")
         time.sleep(0.5)
+    
+    print(f"[python-worker] READY.txt found after {time.time() - start_time:.2f}s")
 
     # Read images
     image_files = sorted([f for f in image_dir.glob("img_*.jpg") if f.is_file()] +
