@@ -4,7 +4,8 @@ const path = require("path");
 const stateManager = require("./state-manager");
 const apiClient = require("./api-client");
 
-const UPLOADS_DIR = path.join(__dirname, "..", "shared", "uploads");
+const UPLOADS_DIR =
+  process.env.UPLOAD_DIR || path.join(__dirname, "..", "shared", "uploads");
 const MAX_IMAGES = parseInt(process.env.MAX_IMAGES, 10) || 20;
 const GENERATE_COOLDOWN_MS = 5000;
 const generateCooldowns = new Map();
@@ -46,6 +47,7 @@ async function handleCommand(msg, body) {
     await msg.reply("⏳ Processing your images, this may take a moment...");
 
     const imageDir = path.join(UPLOADS_DIR, userId);
+    ensureDir(imageDir);
 
     // Write READY.txt signal
     const readyPath = path.join(imageDir, "READY.txt");

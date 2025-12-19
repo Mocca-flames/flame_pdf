@@ -22,8 +22,8 @@ async def generate_pdf(req: GenerateRequest):
     ready_file = image_dir / "READY.txt"
     print(f"[python-worker] Checking for {ready_file.absolute()}")
 
-    # Poll for READY.txt with 10-second timeout
-    timeout = 10.0
+    # Poll for READY.txt with 30-second timeout
+    timeout = 30.0
     start_time = time.time()
     while not ready_file.exists():
         elapsed = time.time() - start_time
