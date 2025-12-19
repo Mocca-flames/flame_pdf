@@ -17,8 +17,14 @@ function ensureDir(dir) {
 async function handleCommand(msg, body) {
   const from = msg.from;
   const userId = from.split("@")[0];
+  const command = body.toLowerCase();
 
-  if (body === "/generate") {
+  // Command Aliases and Flexible Matching
+  const isGenerate = command === "/generate" || command === "/pdf" || command === "/done";
+  const isClear = command === "/clear" || command === "/reset";
+  const isHelp = command === "/help" || command === "/start" || command === "hi" || command === "hello" || command === "hey";
+
+  if (isGenerate) {
     const last = generateCooldowns.get(userId) || 0;
     const now = Date.now();
     if (now - last < GENERATE_COOLDOWN_MS) {
@@ -32,21 +38,34 @@ async function handleCommand(msg, body) {
     const session = stateManager.getSession(userId);
     if (!session || session.images.length === 0) {
       await msg.reply(
-        "❌ Please send one or more images before using /generate."
+        "❌ Please send one or more images before using /pdf."
       );
       return;
     }
     const images = session.images;
+
+    // Verify images exist on disk
+    const imageDir = path.join(UPLOADS_DIR, userId);
+    const missingImages = images.filter(
+      (img) => !fs.existsSync(path.join(imageDir, img))
+    );
+
+    if (missingImages.length === images.length) {
+      await msg.reply(
+        "❌ No images found on server. Please re-upload your images."
+      );
+      stateManager.clearSession(userId);
+      return;
+    }
+
     if (images.length > MAX_IMAGES) {
       await msg.reply(
-        `Too many images (${images.length}). Max is ${MAX_IMAGES}. Use /clear and try again.`
+        `Too many images (${images.length}). Max is ${MAX_IMAGES}. Use /clear or /reset and try again.`
       );
       return;
     }
 
     await msg.reply("⏳ Processing your images, this may take a moment...");
-
-    const imageDir = path.join(UPLOADS_DIR, userId);
     ensureDir(imageDir);
 
     // Write READY.txt signal
@@ -130,26 +149,32 @@ async function handleCommand(msg, body) {
         "❌ Sorry, the PDF generation failed due to a service error. Please try again."
       );
     }
-  } else if (body === "/clear") {
+  } else if (isClear) {
     const userDir = path.join(UPLOADS_DIR, userId);
     if (fs.existsSync(userDir)) {
       fs.rmSync(userDir, { recursive: true, force: true });
     }
     stateManager.clearSession(userId);
     await msg.reply("Cleared your uploaded images.");
-  } else if (body === "/help") {
+  } else if (isHelp) {
     await msg.reply(
-      "Welcome to the Flame PDF!\n\n" +
-        "This bot allows you to convert images into a PDF document.\n\n" +
+      "👋 Welcome to the Flame PDF Bot!\n\n" +
+        "I can convert your images into a single PDF document.\n\n" +
+        "How to use:\n" +
+        "1. Send me one or more JPEG or PNG images.\n" +
+        "2. When you are done, type `/pdf` (or `/done`) to generate the document.\n\n" +
         "Available commands:\n" +
-        "/generate - Generate PDF from your uploaded images\n" +
-        "/clear - Clear all uploaded images\n" +
-        "/help - Show this help message\n\n" +
-        "To use: Send JPEG or PNG images, then type /generate to generate the PDF."
+        "• `/pdf` or `/done` - Generate PDF from uploaded images\n" +
+        "• `/clear` or `/reset` - Clear all uploaded images and start over\n" +
+        "• `/help` - Show this message again"
     );
-  } else if (body === "/start") {
-    // Alias for /help
-    await handleCommand(msg, "/help");
+  } else {
+    // Catch-all for unrecognized text input
+    await msg.reply(
+      "I only understand images and commands. Please send me a JPEG or PNG image, or use one of the commands:\n" +
+      "• `/pdf` to generate your PDF\n" +
+      "• `/help` for instructions"
+    );
   }
 }
 
@@ -206,7 +231,7 @@ async function handleMedia(msg) {
   stateManager.updateSession(userId, session);
 
   await msg.reply(
-    `Image ${session.images.length} received. Send more or type /generate`
+    `Image ${session.images.length} received. Send more or type /pdf`
   );
 }
 

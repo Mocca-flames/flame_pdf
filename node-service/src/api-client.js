@@ -33,6 +33,12 @@ async function generatePdf(userId, imageDir) {
     } else if (error.code === "ETIMEDOUT") {
       throw new Error("Request timed out: PDF generation took too long.");
     } else if (error.response) {
+      if (error.response.status === 400) {
+        throw new Error("The worker couldn't find any valid images. Please try re-uploading.");
+      }
+      if (error.response.status === 408) {
+        throw new Error("The worker timed out waiting for your images. Please try again.");
+      }
       throw new Error(
         `API error: ${error.response.status} - ${error.response.statusText}`
       );

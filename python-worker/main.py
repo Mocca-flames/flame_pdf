@@ -44,7 +44,9 @@ async def generate_pdf(req: GenerateRequest):
     image_files = sorted([f for f in image_dir.glob("img_*.jpg") if f.is_file()] +
                          [f for f in image_dir.glob("img_*.png") if f.is_file()])
     if not image_files:
-        raise HTTPException(status_code=400, detail="No images found")
+        all_files = list(image_dir.glob("*"))
+        print(f"[python-worker] 400 Error: No images found in {image_dir.absolute()}. Files present: {[f.name for f in all_files]}")
+        raise HTTPException(status_code=400, detail=f"No images found. Files present: {[f.name for f in all_files]}")
 
     processed_paths = []
     transformed_flags = []
