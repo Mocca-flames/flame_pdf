@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  whatsapp-bot:
+    build: ./node-service
+    volumes:
+      - ./shared:/shared
+      - ./state:/state
+      - ./assets:/assets
+    environment:
+      - PYTHON_API_URL=http://pdf-worker:8000
+      - UPLOAD_DIR=/shared/uploads
+      - MAX_IMAGES=20
+      - SESSION_DIR=./sessions
+      - LOG_LEVEL=info
+    ports:
+      - "3000:3000"
+    depends_on:
+      - pdf-worker
+
+  pdf-worker:
+    build: ./python-worker
+    volumes:
+      - ./shared:/shared
+    environment:
+      - UPLOAD_DIR=/shared/uploads
+      - MAX_PDF_SIZE_MB=25
+      - ALLOWED_FORMATS=jpg,jpeg,png
+      - LOG_LEVEL=info
+    ports:
+      - "8000:8000"

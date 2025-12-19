@@ -1,0 +1,18 @@
+{
+  "name": "whatsapp-pdf-bot-node",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhatsApp client for PDF bot (MVP)",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "check-deps": "npm list --depth=0"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "1.34.2",
+    "qrcode-terminal": "0.12.0",
+    "express": "5.2.1",
+    "pino": "10.1.0",
+    "axios": "1.13.2"
+  }
+}
