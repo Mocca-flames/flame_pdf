@@ -7,6 +7,7 @@ services:
       - ./shared:/shared
       - ./state:/state
       - ./assets:/assets
+      - ./sessions:/app/sessions
     environment:
       - PYTHON_API_URL=http://pdf-worker:8000
       - UPLOAD_DIR=/shared/uploads
