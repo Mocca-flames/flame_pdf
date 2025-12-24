@@ -10,7 +10,7 @@ COPY package*.json ./
 RUN apt-get update && apt-get install -y \
     libgbm-dev \
     libxss1 \
-    libasound2 \
+    libasound2t64 \
     libatk-bridge2.0-0 \
     libdrm2 \
     libxcomposite1 \
