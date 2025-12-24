@@ -24,7 +24,18 @@ const client = new Client({
   }),
   puppeteer: {
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--disable-features=TranslateUI",
+      "--disable-ipc-flooding-protection",
+    ],
   },
 });
 
@@ -66,12 +77,10 @@ client.initialize();
 // Health Check Endpoint
 app.get("/health", (req, res) => {
   const status = client.info ? "ready" : "initializing";
-  res
-    .status(200)
-    .json({
-      status: status,
-      whatsapp_state: client.info ? client.info.status : "unknown",
-    });
+  res.status(200).json({
+    status: status,
+    whatsapp_state: client.info ? client.info.status : "unknown",
+  });
 });
 
 // Start the Express server for health checks
